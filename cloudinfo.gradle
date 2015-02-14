@@ -10,6 +10,8 @@ dependencies {
 
     compile 'org.slf4j:slf4j-simple:1.7.5'
 
+    compile 'org.fusesource.jansi:jansi:1.11'
+
     compile "com.squareup.okhttp:okhttp:${okHttpVersion}"
     compile "com.squareup.okhttp:okhttp-urlconnection:${okHttpVersion}"
     compile("com.squareup.retrofit:retrofit:${retrofitVersion}") {
@@ -20,3 +22,5 @@ dependencies {
 
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
+
+mainClassName = 'org.zirbes.cloudinfo.CloudRunner'
