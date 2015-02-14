@@ -12,4 +12,8 @@ interface ServiceInfoApi {
     @GET('/health')
     Map health()
 
+    @Headers(['Accept: application/json'])
+    @GET('/version.json')
+    GruntInfo gruntVersion()
+
 }

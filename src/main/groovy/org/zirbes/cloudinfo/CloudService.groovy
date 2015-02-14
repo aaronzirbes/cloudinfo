@@ -13,18 +13,19 @@ import static org.fusesource.jansi.Ansi.Color.*
 @Slf4j
 class CloudService {
 
-    static final Map<String, Boolean> services = [
-        'customer'         : true,
-        'dealer'           : true,
-        'device'           : true,
-        'faultcode'        : true,
-        'manufacturer'     : true,
-        'userpreference'   : true,
-        'user'             : false,
-        'vehicle'          : true,
-        'entity-gateway'   : true,
-        'search'           : false,
-        'security-gateway' : false
+    static final Map<String, Version> services = [
+        'customer'         : Version.BOOT,
+        'dealer'           : Version.BOOT,
+        'device'           : Version.BOOT,
+        'faultcode'        : Version.BOOT,
+        'manufacturer'     : Version.BOOT,
+        'userpreference'   : Version.BOOT,
+        'user'             : Version.NONE,
+        'vehicle'          : Version.BOOT,
+        'entity-gateway'   : Version.BOOT,
+        'search'           : Version.NONE,
+        'portal'           : Version.GRUNT,
+        'security-gateway' : Version.NONE
     ]
 
 
@@ -32,20 +33,39 @@ class CloudService {
     static final String DOMAIN = 'connectedfleet.io'
     static final String PORT = '8080'
 
-    void checkServices() {
-        services.each { String service, Boolean hasVersion ->
-            String uri = "http://${service}-${ENVIRONMENT}.${DOMAIN}:${PORT}"
-            ServiceInfoApi serviceInfoApi = new RetrofitClientBuilder().withEndpoint(uri).build(ServiceInfoApi)
-            Map health = [ (service): 'DOWN' ]
-            try {
-                health = serviceInfoApi.health()
-            } catch (RetrofitError re) {
-                log.error "Unable to reach service"
-            }
+    Map getBootHealth(ServiceInfoApi serviceInfoApi) {
+        try {
+            return serviceInfoApi.health()
+        } catch (RetrofitError re) {
+            log.error "Unable to reach service"
+        }
+        return null
+    }
 
+    void checkServices() {
+        services.each { String service, Version versionType ->
+            String uri = "http://${service}-${ENVIRONMENT}.${DOMAIN}"
             String servicePad = service.padRight(32)
-                alignService(0, 32, service, health.status)
-            if (hasVersion) {
+            if (versionType != Version.GRUNT) { uri = "${uri}:${PORT}" }
+
+            ServiceInfoApi serviceInfoApi = new RetrofitClientBuilder().withEndpoint(uri).build(ServiceInfoApi)
+
+            Map health = [ (service): 'DOWN' ]
+            GruntInfo info
+            if (versionType == Version.GRUNT) {
+                try {
+                    info = serviceInfoApi.gruntVersion()
+                    health[service] = 'UP'
+                } catch (RetrofitError re) {
+                    alignVersion(8, 24, 'ERROR', 'VERSION ENDPOINT NOT FOUND')
+                }
+                uri = "${uri}:${PORT}"
+            } else {
+                health = getBootHealth(serviceInfoApi)
+            }
+            alignService(0, 32, service, health.status)
+
+            if (versionType == Version.BOOT) {
                 try {
                     VersionInfo version = serviceInfoApi.version()
                     alignVersion(8, 24, 'buildId', version.buildId)
@@ -57,8 +77,17 @@ class CloudService {
                 } catch (RetrofitError re) {
                     alignVersion(8, 24, 'ERROR', 'VERSION ENDPOINT NOT FOUND')
                 }
+            } else if (info) {
+                alignVersion(8, 24, 'gitBranch',info.build.gitBranch)
+                alignVersion(8, 24, 'gitRevision',info.build.gitRevision)
+                alignVersion(8, 24, 'number',info.build.number)
+                alignVersion(8, 24, 'tag',info.build.tag)
+                alignVersion(8, 24, 'url',info.build.url)
             }
         }
+    }
+
+    void checkPortal() {
     }
 
 
@@ -90,6 +119,12 @@ class CloudService {
         Color color = Color.values()[colorNum]
         return ansi().fg(color).a(str).reset()
 
+    }
+
+    static enum Version {
+        NONE,
+        BOOT,
+        GRUNT
     }
 
 }

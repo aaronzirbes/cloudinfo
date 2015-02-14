@@ -7,6 +7,8 @@ import com.squareup.okhttp.OkHttpClient
 
 import groovy.transform.CompileStatic
 
+import java.util.concurrent.TimeUnit
+
 import retrofit.RequestInterceptor
 import retrofit.RestAdapter
 import retrofit.client.OkClient
@@ -24,21 +26,10 @@ class RetrofitClientBuilder {
         return this
     }
 
-    RetrofitClientBuilder withCache(Boolean useCaching, Integer cacheSizeInBytes = 10 * 1024) {
-        if (useCaching) {
-            this.okHttpClient = new OkHttpClient()
-            String cacheFileLocation = System.getProperty('java.io.tmpdir')
-            File cacheDir = new File(cacheFileLocation, UUID.randomUUID().toString())
-            Cache cache = new Cache(cacheDir, cacheSizeInBytes)
-            this.okHttpClient.setCache(cache)
-        } else {
-            this.okHttpClient = new OkHttpClient()
-        }
-        return this
-    }
-
     @SuppressWarnings('UnnecessaryPublicModifier')
     public <T> T build(Class<T> clazz) {
+        okHttpClient.setConnectTimeout(3, TimeUnit.SECONDS)
+        okHttpClient.setReadTimeout(3, TimeUnit.SECONDS)
         OkClient clientProvider = new OkClient(okHttpClient)
         RestAdapter.Builder builder = new RestAdapter.Builder()
             .setClient(clientProvider)
