@@ -25,9 +25,10 @@ class CloudService {
     ]
 
 
-    static final String ENVIRONMENT = 'qa'
+    static final String ENVIRONMENT = 'dev'
     static final String DOMAIN = 'connectedfleet.io'
     static final String PORT = '8080'
+    static final Map BAD_HEALTH = [ status: 'DOWN' ]
 
     Map getBootHealth(ServiceInfoApi serviceInfoApi) {
         try {
@@ -46,7 +47,7 @@ class CloudService {
 
             ServiceInfoApi serviceInfoApi = new RetrofitClientBuilder().withEndpoint(uri).build(ServiceInfoApi)
 
-            Map health = [ (service): 'DOWN' ]
+            Map health = BAD_HEALTH
             GruntInfo info
             if (versionType == Version.GRUNT) {
                 try {
@@ -57,12 +58,15 @@ class CloudService {
                 }
                 uri = "${uri}:${PORT}"
             } else {
-                health = getBootHealth(serviceInfoApi)
+                health = getBootHealth(serviceInfoApi) ?: BAD_HEALTH
             }
             alignService(0, 32, service, health.status)
 
             if (versionType == Version.BOOT) {
                 try {
+                    if (health.status != 'UP') {
+                        log.warn "${health}"
+                    }
                     VersionInfo version = serviceInfoApi.version()
                     alignVersion(8, 24, 'buildId', version.buildId)
                     alignVersion(8, 24, 'buildNumber', version.buildNumber)
