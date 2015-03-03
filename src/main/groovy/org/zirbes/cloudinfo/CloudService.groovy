@@ -14,18 +14,14 @@ import static org.fusesource.jansi.Ansi.Color.*
 class CloudService {
 
     static final Map<String, Version> services = [
-        'customer'         : Version.BOOT,
-        'dealer'           : Version.BOOT,
-        'device'           : Version.BOOT,
-        'faultcode'        : Version.BOOT,
-        'manufacturer'     : Version.BOOT,
-        'userpreference'   : Version.BOOT,
-        'user'             : Version.NONE,
-        'vehicle'          : Version.BOOT,
-        'entity-gateway'   : Version.BOOT,
-        'search'           : Version.NONE,
-        'portal'           : Version.GRUNT,
-        'security-gateway' : Version.NONE
+        'security-gateway'       : Version.NONE,
+        'authentication-service' : Version.NONE,
+        'user-gateway-service'   : Version.NONE,
+        'user'                   : Version.NONE,
+        'entity-gateway'         : Version.BOOT,
+        'entity-service'         : Version.BOOT,
+        'search'                 : Version.NONE,
+        'portal'                 : Version.GRUNT
     ]
 
 
@@ -55,7 +51,7 @@ class CloudService {
             if (versionType == Version.GRUNT) {
                 try {
                     info = serviceInfoApi.gruntVersion()
-                    health[service] = 'UP'
+                    health.status = 'UP'
                 } catch (RetrofitError re) {
                     alignVersion(8, 24, 'ERROR', 'VERSION ENDPOINT NOT FOUND')
                 }
