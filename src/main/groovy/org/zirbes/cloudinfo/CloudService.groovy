@@ -25,7 +25,6 @@ class CloudService {
     ]
 
 
-    static final String ENVIRONMENT = 'dev'
     static final String DOMAIN = 'connectedfleet.io'
     static final String PORT = '8080'
     static final Map BAD_HEALTH = [ status: 'DOWN' ]
@@ -39,9 +38,9 @@ class CloudService {
         return null
     }
 
-    void checkServices() {
+    void checkServices(String environment) {
         services.each { String service, Version versionType ->
-            String uri = "http://${service}-${ENVIRONMENT}.${DOMAIN}"
+            String uri = "http://${service}-${environment}.${DOMAIN}"
             String servicePad = service.padRight(32)
             if (versionType != Version.GRUNT) { uri = "${uri}:${PORT}" }
 

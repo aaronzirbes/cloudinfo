@@ -11,6 +11,8 @@ apply plugin: 'groovy'
 apply plugin: 'application'
 apply plugin: 'com.github.johnrengelman.shadow'
 
+build.dependsOn 'shadowJar'
+
 repositories {
     jcenter()
 }
